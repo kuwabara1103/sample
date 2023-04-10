@@ -24,7 +24,9 @@ jobs:
           BRANCH: ${{github.event.pull_request.head.ref}}
           REPO: ${{github.repository}}
           COMMIT: ${{github.event.pull_request.head.sha}}
-        run: ./.github/workflows/add-tag.sh  
+        run: |
+          chmod +x ./.github/workflows/add-tag.sh
+          ./.github/workflows/add-tag.sh  
 
       - name: Generate release note
         id: generate-release-note
