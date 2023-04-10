@@ -1,4 +1,49 @@
-name: Push Action
+# name: Push Action
+
+# on:
+#   pull_request:
+#     types: [ opened, synchronize, reopened, ready_for_review ]
+#     branches:
+#       - release_note_test
+
+# jobs:
+#   generate-and-upload-release-note:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       release-note: ${{ steps.generate-release-note.outputs.release-note }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#       - name: set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: 3.11
+#       - name: Install requirements
+#         run: pip install releaser
+
+#       - name: add tag
+#         env:
+#           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#           BRANCH: ${{github.event.pull_request.head.ref}}
+#           REPO: ${{github.repository}}
+#           COMMIT: ${{github.event.pull_request.head.sha}}
+#         run: |
+#           chmod +x ./.github/workflows/add-tag.sh
+#           ./.github/workflows/add-tag.sh  
+
+#       - name: Generate release note
+#         id: generate-release-note
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           BRANCH: ${{github.event.pull_request.head.ref}}
+#         run: python .github/workflows/create_release_note.py --description 'release description' ${{ github.ref }}
+#       - name: Upload release note
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: release-note
+#           path: ${{ steps.generate-release-note.outputs.release-note }}
+
+name: Create release tag and release note.
 
 on:
   pull_request:
@@ -7,38 +52,45 @@ on:
       - release_note_test
 
 jobs:
-  generate-and-upload-release-note:
+  create-release-tag:
     runs-on: ubuntu-latest
-    outputs:
-      release-note: ${{ steps.generate-release-note.outputs.release-note }}
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TZ: 'Asia/Tokyo'
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-      - name: Install requirements
-        run: pip install releaser
+      - uses: actions/checkout@v2
 
-      - name: add tag
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          BRANCH: ${{github.event.pull_request.head.ref}}
-          REPO: ${{github.repository}}
-          COMMIT: ${{github.event.pull_request.head.sha}}
+      # 前回のりリースタグを取得する
+      - name: Get previous tag
+        id: pre_tag
         run: |
-          chmod +x ./.github/workflows/add-tag.sh
-          ./.github/workflows/add-tag.sh  
+          echo "::set-output name=pre_tag::$(curl -H 'Accept: application/vnd.github.v3+json' -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)"
 
+      # タグを生成する 「{YYYY.MM.DD}-{当日リリース回数}」
+      - name: Generate release tag
+        id: release_tag
+        run: |
+          today=$(date +'%Y.%m.%d')
+          pre_release_date=$(echo ${{ steps.pre_tag.outputs.pre_tag }} | awk -F'-' '{print $1}')
+          pre_release_count=$(echo ${{ steps.pre_tag.outputs.pre_tag }} | awk -F'-' '{print $2}')
+          if [[ ! $pre_release_date = $today ]]; then
+            echo "init count"
+            pre_release_count=0
+          fi
+          echo "::set-output name=release_tag::$today-$(($pre_release_count + 1))"
+
+      # 前回リリースからの差分をもとに、リリースノートの本文を生成する
       - name: Generate release note
-        id: generate-release-note
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{github.event.pull_request.head.ref}}
-        run: python .github/workflows/create_release_note.py --description 'release description' ${{ github.ref }}
-      - name: Upload release note
-        uses: actions/upload-artifact@v2
-        with:
-          name: release-note
-          path: ${{ steps.generate-release-note.outputs.release-note }}
+        id: release_note
+        run: |
+          echo "::set-output name=release_note::$(curl -X POST -H 'Accept: application/vnd.github.v3+json' -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/releases/generate-notes -d '{"tag_name":"${{ steps.release_tag.outputs.release_tag }}", "previous_tag_name":"${{ steps.pre_tag.outputs.pre_tag }}"}' | jq .body | sed 's/"//g')"
+
+      # タグを切り、リリースノートを作成する
+      - name: Create Release
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
+            https://api.github.com/repos/${{ github.repository }}/releases
