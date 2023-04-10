@@ -1,17 +1,39 @@
 name: Push Action
 
 on:
-  push:
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
     branches:
       - release_note_test
 
 jobs:
-  push-job:
+  generate-and-upload-release-note:
     runs-on: ubuntu-latest
+    outputs:
+      release-note: ${{ steps.generate-release-note.outputs.release-note }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: Run Command
-        run: |
-          echo "Push event has occurred"
-          echo "This is an example command"
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: add tag
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          BRANCH: ${{github.event.pull_request.head.ref}}
+          REPO: ${{github.repository}}
+          COMMIT: ${{github.event.pull_request.head.sha}}
+        run: ./.github/workflows/add-tag.sh  
+
+      - name: Generate release note
+        id: generate-release-note
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{github.event.pull_request.head.ref}}
+        run: python .github/workflows/create_release_note.py
+      - name: Upload release note
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-note
+          path: ${{ steps.generate-release-note.outputs.release-note }}
