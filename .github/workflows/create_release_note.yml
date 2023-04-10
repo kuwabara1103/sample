@@ -1,0 +1,17 @@
+name: Push Action
+
+on:
+  push:
+    branches:
+      - release_note_test
+
+jobs:
+  push-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Run Command
+        run: |
+          echo "Push event has occurred"
+          echo "This is an example command"
