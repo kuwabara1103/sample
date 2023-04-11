@@ -69,33 +69,31 @@ jobs:
         shell: bash
         run: |
           branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
-          echo "release_tag=$branch_name" >> $GITHUB_ENV
+          echo $branch_name
 
       # リリースノートの本文を生成する
       - name: Generate release note
         id: release_note
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-        shell: bash
         run: |
           release_note=$(python .github/workflows/generate_release_note.py)
           echo "release_note=$release_note" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
 
       - name: Output variables
         run: |
           release_note="${{ env.release_note }}"
           echo $'release_note = \n'"$release_note"
-          release_tag="${{ env.release_tag }}"
-          echo "release_tag = $release_tag"
-          github_repository="${{ github.repository }}"
-          echo "github.repository = $github_repository"
+          echo "release_tag = ${{ steps.release_tag.outputs.stdout }}"
+          echo "github.repository = ${{  github.repository }}"
 
       # タグを切り、リリースノートを作成する
       - name: Create Release
-        shell: bash
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d "{ \"tag_name\": \"$release_tag\", \"name\": \"$release_tag\", \"body\": \"$release_note\"}" \
-            https://api.github.com/repos/$github_repository/releases
+            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.stdout }}\", \"name\": \"${{ steps.release_tag.outputs.stdout }}\", \"body\": \"${{ env.release_note }}\"}" \
+            https://api.github.com/repos/${{ github.repository }}/releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
