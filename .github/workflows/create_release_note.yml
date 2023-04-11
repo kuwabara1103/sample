@@ -68,7 +68,7 @@ jobs:
         id: release_tag
         run: |
           branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
-          echo $branch_name
+          echo "{branch_name}={$branch_name}" >> $GITHUB_OUTPUT
         shell: bash
 
       # リリースノートの本文を生成する
@@ -76,7 +76,7 @@ jobs:
         id: release_note
         run: |
           release_note=$(python .github/workflows/generate_release_note.py)
-          echo $release_note
+          echo "{release_note}={$release_note}" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -84,19 +84,18 @@ jobs:
 
       - name: Output variables
         run: |
-          release_note="${{ steps.release_note.outputs.stdout }}"
+          release_note="${{ steps.release_note.outputs.release_note }}"
           echo $'release_note = \n'"$release_note"
-          echo "release_tag = ${{ steps.release_tag.outputs.stdout }}"
+          echo "release_tag = ${{ steps.release_tag.outputs.release_tag }}"
           echo "github.repository = ${{  github.repository }}"
         shell: bash
 
       # タグを切り、リリースノートを作成する
-      - name: Create Release
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.stdout }}\", \"name\": \"${{ steps.release_tag.outputs.stdout }}\", \"body\": \"${{ steps.release_note.outputs.stdout }}\"}" \
-            https://api.github.com/repos/${{ github.repository }}/releases
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
+      # - name: Create Release
+      #   uses: actions/create-release@v1.1.4
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ steps.release_tag.outputs.release_tag }}
+      #     release_name: ${{ steps.release_tag.outputs.release_tag }}
+      #     body: ${{ steps.release_note.outputs.release_note }}
