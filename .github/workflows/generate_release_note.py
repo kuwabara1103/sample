@@ -45,6 +45,8 @@ if release_issue is not None:
 
     # ```で囲まれている文言のみ抽出する
     pattern = r"```([\s\S]*?)```"
-    release_note = re.search(pattern, issue_body).group(1)
+    extracted_release_note = re.search(pattern, issue_body).group(1)
 
-    print(release_note) # 改行コードを\rから\nに変更
+    # 各エスケープ文字を適切に変換し、JSON文字列に適した形式にする
+    formatted_release_note = extracted_release_note.replace('\r', '').replace('\n', '\\n').replace('\t', '\\t').replace('"', '\\"')
+    print(formatted_release_note, end='') # 出力の末尾に改行文字が追加されないようにする

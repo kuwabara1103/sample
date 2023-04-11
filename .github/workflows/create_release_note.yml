@@ -39,12 +39,6 @@ jobs:
             const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
             core.setOutput("release_note", release_note);
 
-      - name: Output variables
-        run: |
-          echo "release_note = ${{ steps.release_note.outputs.release_note }}"
-          echo "release_tag = ${{ steps.release_tag.outputs.release_tag }}"
-        shell: bash
-
       # タグを切り、リリースノートを生成する
       - name: Create Release
         run: |
