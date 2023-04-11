@@ -1,17 +1,102 @@
-name: Push Action
+# name: Push Action
+
+# on:
+#   pull_request:
+#     types: [ opened, synchronize, reopened, ready_for_review ]
+#     branches:
+#       - release_note_test
+
+# jobs:
+#   generate-and-upload-release-note:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       release-note: ${{ steps.generate-release-note.outputs.release-note }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#       - name: set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: 3.11
+#       - name: Install requirements
+#         run: pip install releaser
+
+#       - name: add tag
+#         env:
+#           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#           BRANCH: ${{github.event.pull_request.head.ref}}
+#           REPO: ${{github.repository}}
+#           COMMIT: ${{github.event.pull_request.head.sha}}
+#         run: |
+#           chmod +x ./.github/workflows/add-tag.sh
+#           ./.github/workflows/add-tag.sh  
+
+#       - name: Generate release note
+#         id: generate-release-note
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           BRANCH: ${{github.event.pull_request.head.ref}}
+#         run: python .github/workflows/create_release_note.py --description 'release description' ${{ github.ref }}
+#       - name: Upload release note
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: release-note
+#           path: ${{ steps.generate-release-note.outputs.release-note }}
+
+name: Create release tag and release note.
 
 on:
-  push:
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
     branches:
       - release_note_test
 
 jobs:
-  push-job:
+  create-release-tag:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: Run Command
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      # タグを生成する　release_tagにブランチ名を設定
+      - name: Generate release tag
+        id: release_tag
         run: |
-          echo "Push event has occurred"
-          echo "This is an example command"
+          branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
+          echo "release_tag=$branch_name" >> $GITHUB_OUTPUT
+        shell: bash
+
+    # リリースノートの本文を生成する
+      - name: Set release note output
+        uses: actions/github-script@v6
+        id: release_note
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        with:
+          script: |
+            const { execSync } = require("child_process");
+            const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
+            core.setOutput("release_note", release_note);
+
+      - name: Output variables
+        run: |
+          echo "release_note = ${{ steps.release_note.outputs.release_note }}"
+          echo "release_tag = ${{ steps.release_tag.outputs.release_tag }}"
+          echo "github.repository = ${{  github.repository }}"
+        shell: bash
+
+      # タグを切り、リリースノートを作成する
+      - name: Create Release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.release_tag.outputs.release_tag }}
+          release_name: ${{ steps.release_tag.outputs.release_tag }}
+          body: ${{ steps.release_note.outputs.release_note }}
