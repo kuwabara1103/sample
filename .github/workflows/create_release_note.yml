@@ -68,7 +68,7 @@ jobs:
         id: release_tag
         run: |
           branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
-          echo "{branch_name}={$branch_name}" >> $GITHUB_OUTPUT
+          echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
         shell: bash
 
       # リリースノートの本文を生成する
@@ -76,7 +76,7 @@ jobs:
         id: release_note
         run: |
           release_note=$(python .github/workflows/generate_release_note.py)
-          echo "{release_note}={$release_note}" >> $GITHUB_OUTPUT
+          echo "release_note=$release_note" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
