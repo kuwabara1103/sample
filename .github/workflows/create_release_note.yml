@@ -66,6 +66,7 @@ jobs:
       # タグを生成する　release_tagにブランチ名を設定
       - name: Generate release tag
         id: release_tag
+        shell: bash
         run: |
           branch_name=${{ github.event.pull_request.head.ref }}
           echo "::set-output name=release_tag::$branch_name"
@@ -73,13 +74,23 @@ jobs:
       # リリースノートの本文を生成する
       - name: Generate release note
         id: release_note
-        run: python .github/workflows/generate_release_note.py
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          BRANCH: ${{github.event.pull_request.head.ref}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          release_note=$(python .github/workflows/generate_release_note.py)
+          echo "::set-output name=release_note::$release_note"
 
-      # タグを切り、リリースノートを作成する
+      - name: Output variables
+        run: |
+          echo "release_note = ${{ steps.release_note.outputs.release_note }}"
+          echo "release_tag = ${{ steps.release_tag.outputs.release_tag }}"
+          echo "github.repository = ${{  github.repository }}"
+
+        # タグを切り、リリースノートを作成する
       - name: Create Release
+        shell: bash
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \

@@ -1,6 +1,5 @@
 import json
 import os
-import urllib.parse
 import urllib.request
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
@@ -43,4 +42,4 @@ release_issue = get_release_issue()
 if release_issue is not None:
     issue_body = release_issue['body']
     release_note = issue_body
-    print(f"::set-output name=release_note::{release_note}")
+    print(release_note) # release_noteを標準出力に出力する
