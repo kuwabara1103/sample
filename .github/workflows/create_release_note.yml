@@ -92,11 +92,11 @@ jobs:
         shell: bash
 
       # タグを切り、リリースノートを作成する
-      # - name: Create Release
-      #   uses: actions/create-release@v1.1.4
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: ${{ steps.release_tag.outputs.release_tag }}
-      #     release_name: ${{ steps.release_tag.outputs.release_tag }}
-      #     body: ${{ steps.release_note.outputs.release_note }}
+      - name: Create Release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.release_tag.outputs.release_tag }}
+          release_name: ${{ steps.release_tag.outputs.release_tag }}
+          body: ${{ steps.release_note.outputs.release_note }}
