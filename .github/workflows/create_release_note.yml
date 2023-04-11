@@ -72,7 +72,7 @@ jobs:
       # リリースノートの本文を生成する
       - name: Generate release note
         id: release_note
-        run: python generate_release_note.py
+        run: python .github/workflows/generate_release_note.py
         env:
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_REPOSITORY: ${{ github.repository }}
