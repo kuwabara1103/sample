@@ -1,6 +1,7 @@
 import json
 import os
 import urllib.request
+import re
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 BRANCH = os.environ.get('BRANCH')
@@ -40,6 +41,11 @@ def get_release_issue():
 
 release_issue = get_release_issue()
 if release_issue is not None:
-    issue_body = release_issue['body']
-    release_note = issue_body
+    issue_body = release_issue['body']    
+    # マッチング対象のパターンを定義
+    pattern = r"```([\s\S]*?)```"
+    # 正規表現でマッチング
+    match = re.search(pattern, issue_body)
+    # マッチングした文字列を取得
+    release_note = match.group(1)
     print(release_note, end='\n') # 改行コードを\nに変更

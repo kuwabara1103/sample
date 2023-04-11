@@ -19,12 +19,12 @@ jobs:
           python-version: 3.11
 
       # タグを生成する　release_tagにブランチ名を設定
-      - name: Generate release tag
-        id: release_tag
-        run: |
-          branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
-          echo "release_tag=$branch_name" >> $GITHUB_OUTPUT
-        shell: bash
+      # - name: Generate release tag
+      #   id: release_tag
+      #   run: |
+      #     branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
+      #     echo "release_tag=$branch_name" >> $GITHUB_OUTPUT
+      #   shell: bash
 
     # リリースノートの本文を生成する
       - name: Set release note output
@@ -42,14 +42,14 @@ jobs:
       - name: Output variables
         run: |
           echo "release_note = ${{ steps.release_note.outputs.release_note }}"
-          echo "release_tag = ${{ steps.release_tag.outputs.release_tag }}"
-          echo "github.repository = ${{  github.repository }}"
+          # echo "release_tag = ${{ steps.release_tag.outputs.release_tag }}"
+          # echo "github.repository = ${{  github.repository }}"
         shell: bash
 
       # タグを切り、リリースノートを作成する
-      - name: Create Release
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
-            https://api.github.com/repos/${{ github.repository }}/releases
+      # - name: Create Release
+      #   run: |
+      #     curl -X POST \
+      #       -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+      #       -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
+      #       https://api.github.com/repos/${{ github.repository }}/releases
