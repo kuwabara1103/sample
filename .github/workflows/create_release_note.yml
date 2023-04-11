@@ -71,7 +71,7 @@ jobs:
           echo "release_tag=$branch_name" >> $GITHUB_ENV
         shell: bash
 
-      # リリースノートの本文を生成する
+    # リリースノートの本文を生成する
       - name: Set release note output
         uses: actions/github-script@v6
         id: release_note
@@ -86,8 +86,7 @@ jobs:
 
       - name: Output variables
         run: |
-          release_note="${{ steps.release_note.outputs.release_note }}"
-          echo $'release_note = \n'"$release_note"
+          echo "release_note = ${{ steps.release_note.outputs.release_note }}"
           echo "release_tag = ${{ steps.release_tag.outputs.release_tag }}"
           echo "github.repository = ${{  github.repository }}"
         shell: bash

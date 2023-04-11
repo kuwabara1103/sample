@@ -42,4 +42,4 @@ release_issue = get_release_issue()
 if release_issue is not None:
     issue_body = release_issue['body']
     release_note = issue_body
-    print(release_note) # release_noteを標準出力に出力する
+    print(release_note, end='\n') # 改行コードを\nに変更
