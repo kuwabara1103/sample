@@ -47,4 +47,4 @@ if release_issue is not None:
     pattern = r"```([\s\S]*?)```"
     release_note = re.search(pattern, issue_body).group(1)
 
-    print(release_note, end='\n') # 改行コードを\rから\nに変更
+    print(release_note) # 改行コードを\rから\nに変更
