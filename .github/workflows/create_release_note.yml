@@ -74,9 +74,8 @@ jobs:
         id: release_note
         run: python .github/workflows/generate_release_note.py
         env:
-          GITHUB_HEAD_REF: ${{ github.head_ref }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          BRANCH: ${{github.event.pull_request.head.ref}}
 
       # タグを切り、リリースノートを作成する
       - name: Create Release
