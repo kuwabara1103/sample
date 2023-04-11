@@ -18,7 +18,7 @@ def remove_prefix(text, prefix):
     return text
 
 def get_open_issues(page):
-    url = f"https://api.github.com/repos/eightcard/Sansan-Android/issues?state=open&page={page}&per_page={PER_PAGE}"
+    url = f"https://api.github.com/repos/kuwabara1103/myapp/issues?state=open&page={page}&per_page={PER_PAGE}"
     req = create_request(url)
     with urllib.request.urlopen(req) as res:
         issues = json.load(res)

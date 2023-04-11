@@ -54,13 +54,14 @@ on:
 jobs:
   create-release-tag:
     runs-on: ubuntu-latest
-
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TZ: 'Asia/Tokyo'
-
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
 
       # タグを生成する　release_tagにブランチ名を設定
       - name: Generate release tag
