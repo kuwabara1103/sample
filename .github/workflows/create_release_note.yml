@@ -74,13 +74,18 @@ jobs:
       # リリースノートの本文を生成する
       - name: Generate release note
         id: release_note
-        run: |
-          release_note=$(python .github/workflows/generate_release_note.py)
-          echo "release_note=$release_note" >> $GITHUB_OUTPUT
+        run: python .github/workflows/generate_release_note.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
         shell: bash
+      
+      - name: Set release note output
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const release_note = '${{ steps.release_note.outputs.stdout }}';
+            core.setOutput("release_note", release_note);
 
       - name: Output variables
         run: |
