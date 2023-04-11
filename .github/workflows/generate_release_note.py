@@ -42,10 +42,9 @@ def get_release_issue():
 release_issue = get_release_issue()
 if release_issue is not None:
     issue_body = release_issue['body']    
-    # マッチング対象のパターンを定義
+
+    # ```で囲まれている文言のみ抽出する
     pattern = r"```([\s\S]*?)```"
-    # 正規表現でマッチング
-    match = re.search(pattern, issue_body)
-    # マッチングした文字列を取得
-    release_note = match.group(1)
-    print(release_note, end='\n') # 改行コードを\nに変更
+    release_note = re.search(pattern, issue_body).group(1)
+
+    print(release_note, end='\n') # 改行コードを\rから\nに変更
