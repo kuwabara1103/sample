@@ -57,43 +57,46 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.11
 
       # タグを生成する　release_tagにブランチ名を設定
       - name: Generate release tag
         id: release_tag
-        shell: bash
         run: |
           branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
           echo $branch_name
+        shell: bash
 
       # リリースノートの本文を生成する
       - name: Generate release note
         id: release_note
         run: |
           release_note=$(python .github/workflows/generate_release_note.py)
-          echo "release_note=$release_note" >> $GITHUB_ENV
+          echo $release_note
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
 
       - name: Output variables
         run: |
-          release_note="${{ env.release_note }}"
+          release_note="${{ steps.release_note.outputs.stdout }}"
           echo $'release_note = \n'"$release_note"
           echo "release_tag = ${{ steps.release_tag.outputs.stdout }}"
           echo "github.repository = ${{  github.repository }}"
+        shell: bash
 
       # タグを切り、リリースノートを作成する
       - name: Create Release
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.stdout }}\", \"name\": \"${{ steps.release_tag.outputs.stdout }}\", \"body\": \"${{ env.release_note }}\"}" \
+            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.stdout }}\", \"name\": \"${{ steps.release_tag.outputs.stdout }}\", \"body\": \"${{ steps.release_note.outputs.stdout }}\"}" \
             https://api.github.com/repos/${{ github.repository }}/releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
