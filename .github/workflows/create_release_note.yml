@@ -18,8 +18,16 @@ jobs:
         with:
           python-version: 3.11
 
-    # リリースノートの本文を生成する
-      - name: Set release note output
+      # タグ名を生成する
+      - name: Generate release tag
+        id: release_tag
+        run: |
+          branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
+          echo "release_tag=$branch_name" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # リリースノートの本文を生成する
+      - name: Generate release note body
         uses: actions/github-script@v6
         id: release_note
         env: 
@@ -31,12 +39,10 @@ jobs:
             const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
             core.setOutput("release_note", release_note);
 
-      # タグを切り、リリースノートを作成する
+      # タグを切り、リリースノートを生成する
       - name: Create Release
         run: |
-          release_tag=$(echo "${{ github.event.pull_request.head.ref }}" | sed 's/refs\/tags\///')
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d "{ \"tag_name\": \"${release_tag}\", \"name\": \"${release_tag}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
+            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
             https://api.github.com/repos/${{ github.repository }}/releases
-        shell: bash
