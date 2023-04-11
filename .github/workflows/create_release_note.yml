@@ -34,7 +34,7 @@ jobs:
       # タグを切り、リリースノートを作成する
       - name: Create Release
         run: |
-          release_tag=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
+          release_tag=$(echo "${{ github.event.pull_request.head.ref }}" | sed 's/refs\/tags\///')
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -d "{ \"tag_name\": \"${release_tag}\", \"name\": \"${release_tag}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
