@@ -37,5 +37,5 @@ jobs:
           release_tag=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d '{ "tag_name": "'${release_tag}'", "name": "'${release_tag}'", "body": "'${{ steps.release_note.outputs.release_note }}'" }' \
+            -d "{ \"tag_name\": \"${release_tag}\", \"name\": \"${release_tag}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
             https://api.github.com/repos/${{ github.repository }}/releases
