@@ -68,23 +68,18 @@ jobs:
         id: release_tag
         run: |
           branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
-          echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
+          echo "release_tag=$branch_name" >> $GITHUB_ENV
         shell: bash
 
       # リリースノートの本文を生成する
-      - name: Generate release note
-        id: release_note
-        run: python .github/workflows/generate_release_note.py
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-        shell: bash
-      
       - name: Set release note output
         uses: actions/github-script@v6
+        id: release_note
         with:
           script: |
-            const release_note = '${{ steps.release_note.outputs.stdout }}';
+            const core = require('@actions/core');
+            const { execSync } = require("child_process");
+            const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
             core.setOutput("release_note", release_note);
 
       - name: Output variables
