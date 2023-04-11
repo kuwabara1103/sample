@@ -77,7 +77,6 @@ jobs:
         id: release_note
         with:
           script: |
-            const core = require('@actions/core');
             const { execSync } = require("child_process");
             const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
             core.setOutput("release_note", release_note);
