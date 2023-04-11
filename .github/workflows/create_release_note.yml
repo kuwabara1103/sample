@@ -2,14 +2,15 @@ name: Create release tag and release note.
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, ready_for_review ]
     branches:
-      - release_note_test
+      - main
+    types: [ closed ]
 
 jobs:
   create-release-tag:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: github.event.pull_request.merged == true
     steps:
       - name: checkout
         uses: actions/checkout@v3
