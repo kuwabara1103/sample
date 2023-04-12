@@ -36,8 +36,13 @@ jobs:
         with:
           script: |
             const { execSync } = require("child_process");
-            const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
-            core.setOutput("release_note", release_note);
+            try {
+              const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
+              core.setOutput("release_note", release_note);
+            } catch (error) {
+              console.error("Error executing script:", error.stderr.toString());
+              core.setFailed("Failed to generate release note");
+            }
 
       # タグを切り、リリースノートを生成する
       - name: Create Release
