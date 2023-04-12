@@ -27,7 +27,7 @@ def get_release_issue():
     while True:
         issues = get_open_issues(page)
         for issue in issues:
-            print(f"issue: {issue['title']}")  # ログを追加
+            print(f"issue: {issue}")  # ログを追加
             # v6.0.5リリース または [Hotfix]v6.0.5リリース のような名前のIssueを見つける
             if re.match(f'(\[Hotfix\])?{version_name}リリース', issue['title']):
                 return issue
