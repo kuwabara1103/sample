@@ -37,7 +37,8 @@ jobs:
           script: |
             const { execSync } = require("child_process");
             try {
-              const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
+              const options = { encoding: 'utf-8', stdio: 'inherit' };
+              const release_note = execSync("python .github/workflows/generate_release_note.py", options).toString().trim();
               core.setOutput("release_note", release_note);
             } catch (error) {
               console.error("Error executing script:", error.stderr.toString());
