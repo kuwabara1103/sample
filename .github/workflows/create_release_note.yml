@@ -7,19 +7,21 @@ on:
       - release_note_test
 
 jobs:
-  create-release-tag:
+  release-note:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: github.event.pull_request.merged == true
     steps:
       - name: checkout
         uses: actions/checkout@v3
+
       - name: set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
 
       # タグ名を生成する
-      - name: Generate release tag
+      - name: Create release tag
         id: release_tag
         run: |
           release_version=$(echo ${{ github.event.pull_request.head.ref }} | sed -E 's/^(release|hotfix)\///')
@@ -27,16 +29,16 @@ jobs:
         shell: bash
 
       # リリースノートの本文を生成する
-      - name: Generate release note body
+      - name: Create release note body
         uses: actions/github-script@v6
         id: release_note
-        env: 
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
         with:
           script: |
             const { execSync } = require("child_process");
-            const release_note = execSync("python .github/workflows/generate_release_note.py").toString().trim();
+            const release_note = execSync("python .github/workflows/create_release_note_body.py").toString().trim();
             core.setOutput("release_note", release_note);
 
       # タグを切り、リリースノートを生成する
@@ -44,5 +46,25 @@ jobs:
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\"}" \
+            -d "{ \"tag_name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"name\": \"${{ steps.release_tag.outputs.release_tag }}\", \"body\": \"${{ steps.release_note.outputs.release_note }}\", \"target_commitish\": \"master\" }" \
             https://api.github.com/repos/${{ github.repository }}/releases
+
+  # リリースノートの本文はリリースissueから取得しているため、issue削除は必ずリリースノート生成後に行う
+  close-issue:
+    needs: [release-note]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # needsで指定したジョブの成功・失敗に関わらず完了後に実行させる
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: close release issue
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          BRANCH: ${{github.event.pull_request.head.ref}}
+        run: python .github/workflows/close_release_issue.py
