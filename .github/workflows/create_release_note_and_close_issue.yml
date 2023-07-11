@@ -1,8 +1,8 @@
-name: Create release tag and release note.
+name: Create release tag and release note then close issue.
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, ready_for_review, closed ]
+    types: [ closed ]
     branches:
       - release_note_test
 
