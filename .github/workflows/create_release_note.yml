@@ -54,7 +54,6 @@ jobs:
     needs: [release-note]
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # needsで指定したジョブの成功・失敗に関わらず完了後に実行させる
     if: github.event.pull_request.merged == true
     steps:
       - name: checkout
