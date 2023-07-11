@@ -2,7 +2,7 @@ name: Create release tag and release note.
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, ready_for_review ]
+    types: [ opened, synchronize, reopened, ready_for_review, closed ]
     branches:
       - release_note_test
 
