@@ -2,15 +2,14 @@ name: Create release tag and release note.
 
 on:
   pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
     branches:
-      - main
-    types: [ closed ]
+      - release_note_test
 
 jobs:
   create-release-tag:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event.pull_request.merged == true
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -23,8 +22,8 @@ jobs:
       - name: Generate release tag
         id: release_tag
         run: |
-          branch_name=$(echo ${{ github.event.pull_request.head.ref }} | sed 's/^release\///')
-          echo "release_tag=$branch_name" >> $GITHUB_OUTPUT
+          release_version=$(echo ${{ github.event.pull_request.head.ref }} | sed -E 's/^(release|hotfix)\///')
+          echo "release_tag=$release_version" >> $GITHUB_OUTPUT
         shell: bash
 
       # リリースノートの本文を生成する
