@@ -1,0 +1,18 @@
+name: Auto self assign
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  self-assign:
+    name: Self assign
+    runs-on: ubuntu-latest
+    # DependabotやGitHub Actionsのアクションによって作成されたPRはスキップする
+    if: github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]'
+    steps:
+      - name: Self assign
+        # GitHub Actionsがトリガーされたプルリクエストに、そのアクションをトリガーしたユーザー（PRの作成者）をアサインする
+        run: gh pr edit ${{ github.event.number }} --add-assignee ${{ github.actor }} --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
