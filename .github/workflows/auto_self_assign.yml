@@ -8,8 +8,8 @@ jobs:
   self-assign:
     name: Self assign
     runs-on: ubuntu-latest
-    # Depandabotが作成するPRはスキップする
-    if: github.actor != 'dependabot[bot]'
+    # DependabotやGitHub Actionsのアクションによって作成されたPRはスキップする
+    if: github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]'
     steps:
       - name: Self assign
         # GitHub Actionsがトリガーされたプルリクエストに、そのアクションをトリガーしたユーザー（PRの作成者）をアサインする
